@@ -122,6 +122,42 @@ class Usuario
         }
         return $usuarios;
     }
+
+    public static function buscarPorId(int $id){
+            $pdo = self::getConexao();
+            $sql = "SELECT u.id_usuario, u.nome, u.email, u.ativo, u.id_perfil, p.nome_perfil AS perfil_nivel FROM usuarios AS u INNER JOIN perfis AS p ON p.id_perfil = u.id_perfil WHERE u.id_usuario = :id";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([':id' => $id]);
+ 
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+ 
+            if(!$row){
+                throw new Exception("ID do usuário não encontrado.");
+                return null;
+            }
+ 
+            $usuario = new Usuario(id: $row['id_usuario'], nome: $row['nome'], email: $row['email'], senhaHash: "", idPerfil: $row['id_perfil'], ativo: (bool)$row['ativo']);
+            $usuario -> perfilNome = $row['perfil_nivel'];
+            return $usuario;
+        }
+ 
+        public static function buscarPorEmail(string $email){
+            $pdo = self::getConexao();
+            $sql = "SELECT u.id_usuario, u.nome, u.email, u.ativo, u.id_perfil, p.nome_perfil AS perfil_nivel FROM usuarios AS u INNER JOIN perfis AS p ON p.id_perfil = u.id_perfil WHERE u.email = :email";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([':email' => $email]);
+ 
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+ 
+            if(!$row){
+                throw new Exception("E-mail do usuário não encontrado.");
+                return null;
+            }
+ 
+            $usuario = new Usuario(id: $row['id_usuario'], nome: $row['nome'], email: $row['email'], senhaHash: "", idPerfil: $row['id_perfil'], ativo: (bool)$row['ativo']);
+            $usuario -> perfilNome = $row['perfil_nivel'];
+            return $usuario;
+        }
 }
 
 // $usuario1 = new Usuario(idPerfil:1, nome:"Alessandro", email:"alessandro@gmail.com", senhaHash: "123", ativo:false);
