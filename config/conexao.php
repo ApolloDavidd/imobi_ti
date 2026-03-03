@@ -4,7 +4,7 @@ class Conexao
 {
 
     //Varíaveis de conexão
-    private $host = '10.91.45.49';
+    private $host = '10.91.45.50';
     private $bd = 'imobiliaria';
     private $user = 'admin';
     private $pass = '123456';

@@ -111,7 +111,30 @@ class Corretor
         return $corretores;
     }
 
-    public static function confirmarVisita()
+    public static function confirmarVisita(int $id)
+    {
+        $pdo = self::getConexao();
+        $sql = "UPDATE u.ativo FROM usuarios AS u WHERE u.id = :id";
+
+        $stmt = $pdo->query($sql);
+
+        $corretores = [];
+        // $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $corretor = new Corretor(
+                id: $row['id_corretor'],
+                creci: $row['creci'],
+                telefone: $row['telefone'],
+                whatsapp: $row['whatsapp'],
+                ativo: $row['ativo']
+            );
+            array_push($corretores, $corretor);
+        }
+        return $corretores;
+    }
+
+    public static function desativar()
     {
         $pdo = self::getConexao();
         $sql = "SELECT c.id_corretor, c.creci, c.telefone, c.whatsapp, c.ativo
@@ -137,7 +160,7 @@ class Corretor
         return $corretores;
     }
 
-    public static function desativar()
+    public static function reativar()
     {
         $pdo = self::getConexao();
         $sql = "SELECT c.id_corretor, c.creci, c.telefone, c.whatsapp, c.ativo
