@@ -4,7 +4,7 @@ require_once(__DIR__ . "/../config/conexao.php");
 class Imovel
 {
     private ?int $id;
-    private ?int $id_corretor;
+    private int $id_corretor;
     private string  $titulo;
     private string $tipo;
     private string $tipo_negocio;
@@ -25,11 +25,11 @@ class Imovel
     private bool $possui_piscina;
     private bool $possui_churrasqueira;
     private string $slug;
-    private DateTime $data_criacao;
+    private string $data_criacao;
 
     public function __construct(
         ?int $id = 0,
-        ?int $id_corretor = 0,
+        int $id_corretor = 0,
         string  $titulo = "",
         string $tipo = "",
         string $tipo_negocio = "",
@@ -50,7 +50,7 @@ class Imovel
         bool $possui_piscina = false,
         bool $possui_churrasqueira = false,
         string $slug = "",
-        DateTime $data_criacao = null
+        ?string $data_criacao = null
     ) {
         $this->id = $id;
         $this->id_corretor = $id_corretor;
@@ -220,8 +220,7 @@ try{
         id_corretor:1,
         possui_piscina: true,
         possui_churrasqueira: true,
-        slug: "casa-pq-do-carmo",
-        data_criacao: new DateTime
+        slug: "casa-pq-do-carmo"
     );
 }catch(Exception $e){
     echo $e->getMessage();
