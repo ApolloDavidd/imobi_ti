@@ -4,8 +4,7 @@ require_once(__DIR__ . "/../config/conexao.php");
 class Imovel
 {
     private ?int $id;
-    private int $id_corretor;
-    private string  $titulo;
+    private string $titulo;
     private string $tipo;
     private string $tipo_negocio;
     private string $descricao;
@@ -22,6 +21,7 @@ class Imovel
     private int $vagas;
     private float $area;
     private string $status;
+    private int $id_corretor;
     private bool $possui_piscina;
     private bool $possui_churrasqueira;
     private string $slug;
@@ -29,8 +29,7 @@ class Imovel
 
     public function __construct(
         ?int $id = 0,
-        int $id_corretor = 0,
-        string  $titulo = "",
+        string $titulo = "",
         string $tipo = "",
         string $tipo_negocio = "",
         string $descricao = "",
@@ -46,14 +45,15 @@ class Imovel
         int $banheiros = 0,
         int $vagas = 0,
         float $area = 0.0,
-        string $status = "",
+        string $status = "disponivel",
+        int $id_corretor = 0,
         bool $possui_piscina = false,
         bool $possui_churrasqueira = false,
         string $slug = "",
         ?string $data_criacao = null
+
     ) {
         $this->id = $id;
-        $this->id_corretor = $id_corretor;
         $this->titulo = $titulo;
         $this->tipo = $tipo;
         $this->tipo_negocio = $tipo_negocio;
@@ -71,69 +71,67 @@ class Imovel
         $this->vagas = $vagas;
         $this->area = $area;
         $this->status = $status;
+        $this->id_corretor = $id_corretor;
         $this->possui_piscina = $possui_piscina;
         $this->possui_churrasqueira = $possui_churrasqueira;
         $this->slug = $slug;
+        // Inicializa com a data atual se não for fornecida 
         $this->data_criacao = $data_criacao ?? date('Y-m-d H:i:s');
     }
 
-    // Método mágico Get e Set
+    // Método GET
+
     public function __get(string $prop)
     {
         if (property_exists($this, $prop)) {
             return $this->$prop;
-        } else {
-            throw new Exception("Propriedade {$prop} não existe.");
         }
+        throw new Exception("Propridade $prop não existe");
     }
 
+    //Métodos SET
     public function __set(string $prop, $valor)
     {
+
         if (property_exists($this, $prop)) {
+
             switch ($prop) {
-                // 1. Números Inteiros
                 case "id":
-                case "id_corretor":
                 case "quartos":
                 case "banheiros":
                 case "vagas":
+                case "id_corretor":
                     $this->$prop = (int)$valor;
                     break;
-
-                // 2. Números Decimais (Valores e Medidas)
                 case "preco":
                 case "valor_condominio":
                 case "valor_iptu":
                 case "area":
                     $this->$prop = (float)$valor;
                     break;
-
-                // 3. Booleanos (Verdadeiro ou Falso)
                 case "possui_piscina":
                 case "possui_churrasqueira":
                     $this->$prop = (bool)$valor;
                     break;
-
-                // 4. Textos (Strings)
                 default:
                     $this->$prop = is_string($valor) ? trim($valor) : $valor;
                     break;
             }
         } else {
-            throw new Exception("Propriedade {$prop} não existe.");
+            throw new Exception("Propriedade $prop não existe");
         }
-    }
+    } // FIM MÉTODO __SET
+
     private static function getConexao()
     {
         return (new Conexao())->conexao();
     }
 
-    public function salvar()
-    {
+    public function salvar(){
         $pdo = self::getConexao();
 
-        if ($this->id > 0) {
-            // UPDATE
+        if($this->id > 0){
+            // ATUALIZAR
             $sql = "UPDATE `imoveis` SET 
                     titulo = :titulo, tipo = :tipo, tipo_negocio = :tipo_negocio, descricao = :descricao, 
                     preco = :preco, valor_condominio = :valor_condominio, valor_iptu = :valor_iptu, 
@@ -142,21 +140,22 @@ class Imovel
                     status = :status, id_corretor = :id_corretor, possui_piscina = :possui_piscina, 
                     possui_churrasqueira = :possui_churrasqueira, slug = :slug 
                     WHERE id_imovel = :id";
-        } else {
-            // INSERT
+
+        }else{
+            // INSERIR
             $sql = "INSERT INTO `imoveis` (
-                    titulo, tipo, tipo_negocio, descricao, preco, valor_condominio, valor_iptu, 
-                    cep, cidade, bairro, estado, endereco, quartos, banheiros, vagas, area, 
-                    status, id_corretor, possui_piscina, possui_churrasqueira, slug, data_criacao
-                    ) VALUES (
-                    :titulo, :tipo, :tipo_negocio, :descricao, :preco, :valor_condominio, :valor_iptu, 
-                    :cep, :cidade, :bairro, :estado, :endereco, :quartos, :banheiros, :vagas, :area, 
-                    :status, :id_corretor, :possui_piscina, :possui_churrasqueira, :slug, :data_criacao
-                    )";
+                titulo, tipo, tipo_negocio, descricao, preco, valor_condominio, valor_iptu, 
+                cep, cidade, bairro, estado, endereco, quartos, banheiros, vagas, area, 
+                status, id_corretor, possui_piscina, possui_churrasqueira, slug, data_criacao
+                ) VALUES (
+                :titulo, :tipo, :tipo_negocio, :descricao, :preco, :valor_condominio, :valor_iptu, 
+                :cep, :cidade, :bairro, :estado, :endereco, :quartos, :banheiros, :vagas, :area, 
+                :status, :id_corretor, :possui_piscina, :possui_churrasqueira, :slug, :data_criacao
+                )";
         }
 
         $stmt = $pdo->prepare($sql);
-
+        
         $params = [
             ':titulo' => $this->titulo,
             ':tipo' => $this->tipo,
@@ -182,7 +181,7 @@ class Imovel
         ];
 
         if($this->id > 0){
-            $params [':id'] = $this->id;
+            $params[':id'] = $this->id;        
         }else{
             $params[':data_criacao'] = $this->data_criacao;
         }
@@ -192,38 +191,9 @@ class Imovel
         if($res && $this->id==0){
             $this->id = (int)$pdo->lastInsertId();
         }
-            return $res;
-        
+
+        return $res;
+    
     }
 }
-
-try{
-    $imovel = new Imovel(
-        id:0,
-        titulo:"Casa de Luxo no Parque do Carmo",
-        tipo:"Casa",
-        tipo_negocio:"venda",
-        descricao: "Maravilhosa casa localizada no Pq do Carmo, ideais para familia de luxo",
-        preco: 10000000.50,
-        valor_condominio: 0.0,
-        valor_iptu: 1200.00,
-        cep: "08450-000",
-        cidade: "São Paulo",
-        bairro: "Itaquera",
-        estado: "SP",
-        endereco:"Rua Avenida Travessa Itaquera",
-        quartos: 4,
-        banheiros: 2,
-        vagas: 2,
-        area: 350.50,
-        status:"Disponivel",
-        id_corretor:1,
-        possui_piscina: true,
-        possui_churrasqueira: true,
-        slug: "casa-pq-do-carmo"
-    );
-}catch(Exception $e){
-    echo $e->getMessage();
-}
-
 ?>
