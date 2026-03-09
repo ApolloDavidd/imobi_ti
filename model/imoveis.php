@@ -27,6 +27,8 @@ class Imovel
     private string $slug;
     private string $data_criacao;
 
+    private ?string $foto_principal = null;
+
     public function __construct(
         ?int $id = 0,
         string $titulo = "",
@@ -195,5 +197,43 @@ class Imovel
         return $res;
     
     }
+
+ 
+    public function excluir(){
+        $pdo = self::getConexao();
+      
+        // 1. Deleta as fotos do banco primeiro por causa da chave estrangeira
+        $stmt1 = $pdo->prepare("DELETE FROM `fotos_imovel` WHERE `id_imovel` = ?");
+        $stmt1->execute([$this->id]);
+
+        // 2. Deleta o imovel
+        $stmt2 = $pdo->prepare("DELETE FROM `imoveis` WHERE `id_imovel` = ?");
+        return $stmt2->execute([$this->id]);
+    }
+
+    public static function listarComFoto(){
+        $pdo = self::getConexao();
+
+        // Mapeamos 'id_imovel' para 'id' via Alias para coincidir com a propriedade da classe
+        $sql = "SELECT 
+                i.id_imovel AS id, 
+                i.titulo, i.tipo, i.tipo_negocio, i.descricao, i.preco, 
+                i.valor_condominio, i.valor_iptu, i.cep, i.cidade, i.bairro, 
+                i.estado, i.endereco, i.quartos, i.banheiros, i.vagas, i.area, 
+                i.status, i.id_corretor, i.possui_piscina, i.possui_churrasqueira, 
+                i.slug, i.data_criacao,
+                f.caminho AS foto_principal 
+            FROM imoveis i 
+            LEFT JOIN fotos_imovel f ON i.id_imovel = f.id_imovel AND f.destaque = 1
+            ORDER BY i.id_imovel DESC";
+        
+        $stmt = $pdo->query($sql);
+        
+        // MAPEIA O ARRAY DE RETORNO EM UM OBJETO 'Imovel'
+        return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, 'Imovel');
+    
+    }
+
+
 }
 ?>

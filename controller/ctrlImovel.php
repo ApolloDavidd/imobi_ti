@@ -2,7 +2,7 @@
 
 require_once(__DIR__ . "/../model/imoveis.php");
 require_once(__DIR__ . "/../model/fotoImovel.php");
-
+session_start();
 function criarSlug($titulo)
 {
     return strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $titulo)));
@@ -64,11 +64,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
             }
-            header("Location: ../view/painelCadImoveis.php?sucesso=1");
+
+
+            $_SESSION['mensagem'] = "Imóvel cadastrado com sucesso";
+            $_SESSION['tipo_alerta'] = 'success';
+            header("Location: ../view/painelAdmin.php");
         } else {
             throw new Exception("Erro ao gravar no banco de dados");
         }
     } catch (Exception $e) {
         die("Erro? " . $e->getMessage());
+    }
+}
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    // Excluir imoveis
+    if (isset($_GET['excluir_id'])) {
+        $idImovel = (int)$_GET['excluir_id'];
+        $diretorio = "../uploads/imoveis/$idImovel/";
+
+        // Apaga o banco de dados
+        $imovel = new Imovel(id: $idImovel);
+        if ($imovel->excluir()) {
+            // Apaga o diretório
+            if (is_dir($diretorio)) {
+                array_map('unlink', glob("$diretorio/*.*"));
+                rmdir($diretorio);
+            }
+            $_SESSION['mensagem'] = "Imóvel excluído com sucesso";
+            $_SESSION['tipo_alerta'] = 'danger';
+            header("Location: ../view/painelAdmin.php");
+            exit();
+        }
     }
 }
