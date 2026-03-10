@@ -3,6 +3,13 @@ require_once(__DIR__ . "/../model/imoveis.php");
 
 $imoveis = Imovel::listarComFoto();
 session_start();
+$filtros = [
+    'busca' => $_GET['fBusca'] ?? '',
+    'tipo' => $_GET['fTipo'] ?? '',
+    'status' => $_GET['fStatus'] ?? ''
+];
+
+$imoveis = Imovel::listarComFiltros($filtros);
 
 ?>
 
@@ -92,9 +99,9 @@ session_start();
                 <?= $_SESSION['mensagem'] ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-            <?php 
-                unset($_SESSION['mensagem']);
-                unset($_SESSION['tipo_alerta']);
+            <?php
+            unset($_SESSION['mensagem']);
+            unset($_SESSION['tipo_alerta']);
 
             ?>
         <?php endif ?>
@@ -109,30 +116,32 @@ session_start();
         <div class="content-card">
 
             <!-- FILTROS RÁPIDOS -->
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <input type="text" class="form-control" placeholder="Pesquisar por título, bairro ou cidade...">
+            <form action="painelAdmin.php" method="GET">
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <input type="text" name="fBusca" class="form-control" value="<?= htmlspecialchars($filtros['busca'] ?? '') ?>" placeholder="Pesquisar por título, bairro ou cidade...">
+        </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="fTipo">
+                            <option value="">Todos os tipos</option>
+                            <option value="Casa"<?=  $filtros['tipo'] =="Casa" ? 'selected' : '' ?>>Casa</option>
+                            <option value="Apartamento" <?=  $filtros['tipo'] =="Apartamento" ? 'selected' : '' ?>>Apartamento</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="fStatus">
+                            <option value="">Todos os status</option>
+                            <option value="Disponível" <?=  $filtros['status'] =="Disponível" ? 'selected' : '' ?>>Disponível</option>
+                            <option value="Vendido" <?=  $filtros['status'] =="Vendido" ? 'selected' : '' ?>>Vendido</option>
+                            <option value="Alugado" <?=  $filtros['status'] =="Alugado" ? 'selected' : '' ?>>Alugado</option>
+                            <option value="Inativo" <?=  $filtros['status'] =="Inativo" ? 'selected' : '' ?>>Inativo/Rascunho</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-outline-secondary w-100">Filtrar</button>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <select class="form-select">
-                        <option value="">Todos os tipos</option>
-                        <option value="casa">Casa</option>
-                        <option value="apartamento">Apartamento</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <select class="form-select">
-                        <option value="">Todos os status</option>
-                        <option value="Disponível">Disponível</option>
-                        <option value="Vendido">Vendido</option>
-                        <option value="Alugado">Alugado</option>
-                        <option value="Inativo">Inativo/Rascunho</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button class="btn btn-outline-secondary w-100">Filtrar</button>
-                </div>
-            </div>
+            </form>
 
             <!-- TABELA DE DADOS -->
             <div class="table-responsive">

@@ -129,10 +129,11 @@ class Imovel
         return (new Conexao())->conexao();
     }
 
-    public function salvar(){
+    public function salvar()
+    {
         $pdo = self::getConexao();
 
-        if($this->id > 0){
+        if ($this->id > 0) {
             // ATUALIZAR
             $sql = "UPDATE `imoveis` SET 
                     titulo = :titulo, tipo = :tipo, tipo_negocio = :tipo_negocio, descricao = :descricao, 
@@ -142,8 +143,7 @@ class Imovel
                     status = :status, id_corretor = :id_corretor, possui_piscina = :possui_piscina, 
                     possui_churrasqueira = :possui_churrasqueira, slug = :slug 
                     WHERE id_imovel = :id";
-
-        }else{
+        } else {
             // INSERIR
             $sql = "INSERT INTO `imoveis` (
                 titulo, tipo, tipo_negocio, descricao, preco, valor_condominio, valor_iptu, 
@@ -157,7 +157,7 @@ class Imovel
         }
 
         $stmt = $pdo->prepare($sql);
-        
+
         $params = [
             ':titulo' => $this->titulo,
             ':tipo' => $this->tipo,
@@ -182,26 +182,26 @@ class Imovel
             ':slug' => $this->slug
         ];
 
-        if($this->id > 0){
-            $params[':id'] = $this->id;        
-        }else{
+        if ($this->id > 0) {
+            $params[':id'] = $this->id;
+        } else {
             $params[':data_criacao'] = $this->data_criacao;
         }
 
         $res = $stmt->execute($params);
 
-        if($res && $this->id==0){
+        if ($res && $this->id == 0) {
             $this->id = (int)$pdo->lastInsertId();
         }
 
         return $res;
-    
     }
 
- 
-    public function excluir(){
+
+    public function excluir()
+    {
         $pdo = self::getConexao();
-      
+
         // 1. Deleta as fotos do banco primeiro por causa da chave estrangeira
         $stmt1 = $pdo->prepare("DELETE FROM `fotos_imovel` WHERE `id_imovel` = ?");
         $stmt1->execute([$this->id]);
@@ -211,7 +211,8 @@ class Imovel
         return $stmt2->execute([$this->id]);
     }
 
-    public static function listarComFoto(){
+    public static function listarComFoto()
+    {
         $pdo = self::getConexao();
 
         // Mapeamos 'id_imovel' para 'id' via Alias para coincidir com a propriedade da classe
@@ -226,14 +227,56 @@ class Imovel
             FROM imoveis i 
             LEFT JOIN fotos_imovel f ON i.id_imovel = f.id_imovel AND f.destaque = 1
             ORDER BY i.id_imovel DESC";
-        
+
         $stmt = $pdo->query($sql);
-        
+
         // MAPEIA O ARRAY DE RETORNO EM UM OBJETO 'Imovel'
         return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, 'Imovel');
-    
     }
 
+    public static function listarComFiltros(array $filtros = [])
+    {
+        $pdo = self::getConexao();
 
+        $sql = "SELECT i.id_imovel AS id,
+                i.titulo, i.tipo, i.tipo_negocio, i.descricao, i.preco,
+                i.valor_condominio, i.valor_iptu, i.cep, i.cidade, i.bairro,
+                i.estado, i.endereco, i.quartos, i.banheiros, i.vagas, i.area,
+                i.status, i.id_corretor, i.possui_piscina, i.possui_churrasqueira,
+                i.slug, i.data_criacao, f.caminho AS foto_principal
+            FROM imoveis i
+            LEFT JOIN fotos_imovel f ON i.id_imovel = f.id_imovel AND f.destaque = 1
+            WHERE 1=1";
+
+        $params = [];
+        if (!empty($filtros['tipo'])) {
+            $sql .= " AND i.tipo = ?";
+            $params[] = $filtros['tipo'];
+        }
+
+        if (!empty($filtros['status'])) {
+            $sql .= " AND i.status = ?";
+            $params[] = $filtros['status'];
+        }
+
+        if (!empty($filtros['busca'])) {
+            $sql .= " AND (i.titulo LIKE ? OR i.bairro LIKE ? OR i.cidade LIKE ?)";
+            $busca = "%" . $filtros['busca'] . "%";
+
+            $params[] = $busca;
+            $params[] = $busca;
+            $params[] = $busca;
+        }
+
+        $sql .= " ORDER BY i.id_imovel DESC";
+
+        // $stmt = $pdo->query($sql);
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        // echo "<pre>";
+        // print_r($stmt->debugDumpParams());
+
+        // // MAPEIA O ARRAY DE RETORNO EM UM OBJETO 'Imovel'
+        return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, 'Imovel');
+    }
 }
-?>

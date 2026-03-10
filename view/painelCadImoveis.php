@@ -262,6 +262,8 @@
                         <label class="form-label">Status Inicial</label>
                         <select name="status" class="form-select">
                             <option value="disponivel">Disponível</option>
+                            <option value="vendido">Vendido</option>
+                            <option value="alugado">Alugado</option>
                             <option value="inativo">Inativo / Rascunho</option>
                         </select>
                     </div>
